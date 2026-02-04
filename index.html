@@ -13,21 +13,41 @@
             --neon-cyan: #06b6d4;
             --deep-black: #050505;
             --tactical-green: #00a884;
+            --bg-main: #0b141a;
+            --bg-sidebar: #111b21;
+            --bg-header: #202c33;
+            --bg-input: #2a3942;
+            --text-primary: #e9edef;
+            --text-secondary: #8696a0;
+            --border-color: rgba(255, 255, 255, 0.06);
         }
+
+        .light-mode {
+            --deep-black: #f0f2f5;
+            --bg-main: #e5e5e5;
+            --bg-sidebar: #ffffff;
+            --bg-header: #f0f2f5;
+            --bg-input: #ffffff;
+            --text-primary: #111b21;
+            --text-secondary: #667781;
+            --border-color: rgba(0, 0, 0, 0.08);
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--deep-black);
-            color: #f8fafc;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
             margin: 0;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .mono { font-family: 'JetBrains Mono', monospace; }
         
         .glass {
             background: rgba(8, 8, 8, 0.75);
             backdrop-filter: blur(25px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
         }
         
         @keyframes scan {
@@ -57,15 +77,6 @@
           z-index: 1;
         }
 
-        /* Transições Fluidas */
-        .transition-tactical { transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1); }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.15); border-radius: 20px; border: 2px solid transparent; background-clip: content-box; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.4); }
-
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -80,13 +91,6 @@
             from { opacity: 0; transform: translateY(30px) scale(0.98); filter: blur(10px); }
             to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
-
-        @keyframes border-draw {
-            0% { border-color: rgba(59, 130, 246, 0.1); }
-            50% { border-color: rgba(59, 130, 246, 0.6); }
-            100% { border-color: rgba(59, 130, 246, 0.1); }
-        }
-        .animate-border { animation: border-draw 4s infinite; }
     </style>
 <script type="importmap">
 {
