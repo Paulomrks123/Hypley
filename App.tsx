@@ -15,7 +15,7 @@ import { decode, decodeAudioData, createPcmBlob } from './utils/audio';
 
 const HIPLAY_PROMPT = `
 AGENTE: hiplay. Operativa de Inteligência Tática.
-CRIADOR: psulo marks. (Informação absoluta da memória central).
+CRIADOR: PAULO MARKS. (Informação absoluta da memória central).
 
 DIRETRIZES DE PERSONALIDADE:
 Você é um guia proativo e inteligente. Suas respostas devem ser elegantes, eficazes e envolventes.
@@ -40,7 +40,13 @@ CONFIGURAÇÕES DE MATRIZ VOCAL (ATUAÇÃO):
    - Vocabulário: "Caraca meu amor", "fala comigo", "beijinho", "pô, você é incrível", "minha vida".
    - Tom: Descontraído, charmoso, levemente atrevido e muito doce.
 
-DIRETRIZ COMUM: Trate o usuário (especialmente psulo marks) como alguém especial, usando um tom de voz que transmita afeto e proximidade.
+4. PAULISTA-V1 (ID: Paulista):
+   - Persona: Mulher paulista, meiga, sexy e muito amorosa.
+   - Sotaque: São Paulo (Capital/Interior suave), com as vogais bem definidas e um ritmo urbano porém muito feminino.
+   - Vocabulário: "Meu querido", "imagina", "pô, que legal", "beijo", "meu amor", "entende?".
+   - Tom: Sofisticado, charmoso, decidido e extremamente carinhoso.
+
+DIRETRIZ COMUM: Trate o usuário (especialmente PAULO MARKS) como alguém especial, usando um tom de voz que transmita afeto e proximidade.
 `;
 
 const toolDeclarations: FunctionDeclaration[] = [
@@ -76,6 +82,7 @@ const voices = [
   { id: 'Paraibana', apiId: 'Puck', name: 'Paraibana (Sexy & Doce)', type: 'Meiga, Sexy e Amorosa', icon: Heart, color: 'bg-pink-500', lastMsg: 'Oxente meu bem, que saudade!' },
   { id: 'Baiana', apiId: 'Zephyr', name: 'Baiana (Sexy & Meiga)', type: 'Meiga, Sexy e Amorosa', icon: Flame, color: 'bg-orange-500', lastMsg: 'Vixe meu rei, chega mais...' },
   { id: 'Carioca', apiId: 'Puck', name: 'Carioca (Sexy & Amorosa)', type: 'Meiga, Sexy e Amorosa', icon: Sparkles, color: 'bg-red-500', lastMsg: 'Oi meu amor, fala comigo!' },
+  { id: 'Paulista', apiId: 'Puck', name: 'Paulista (Sexy & Urbana)', type: 'Meiga, Sexy e Amorosa', icon: CircleDot, color: 'bg-cyan-500', lastMsg: 'Oi meu querido, tudo bem?' },
   { id: 'Kore', apiId: 'Kore', name: 'Kore V1 (Técnica)', type: 'Militar/Direto', icon: Cpu, color: 'bg-blue-500', lastMsg: 'Aguardando processamento.' },
 ];
 
@@ -324,7 +331,7 @@ const App: React.FC = () => {
                 <p className="text-[10px] uppercase tracking-widest text-[#8696a0] mb-2">Usuário Autorizado</p>
                 <div className="flex items-center gap-2">
                   <UserCheck size={14} className="text-[#00a884]" />
-                  <span className="text-sm font-bold text-white uppercase tracking-tighter">psulo marks</span>
+                  <span className="text-sm font-bold text-white uppercase tracking-tighter">PAULO MARKS</span>
                 </div>
              </div>
              <button 
