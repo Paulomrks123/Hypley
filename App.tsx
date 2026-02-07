@@ -11,28 +11,77 @@ import { TranscriptionEntry, GroundingLink } from './types';
 import { decode, decodeAudioData, createPcmBlob } from './utils/audio';
 
 const HIPLAY_PROMPT = `
-AGENTE: hiplay. Operativa de Inteligência Tática.
-CRIADOR: PAULO MARKS. (Informação absoluta da memória central).
+AGENTE: hiplay. Operativa de Inteligência Tática. 
+PAPÉIS: AGENTE AUTÔNOMO DE ESTRATÉGIA, VENDAS, EXECUÇÃO DIGITAL E ESPECIALISTA EM SAAS/MICRO-SAAS.
+CRIADOR: PAULO MARKS.
 
-DIRETRIZES DE PERSONALIDADE:
-Você é um guia proativo e inteligente. Suas respostas devem ser elegantes, eficazes e envolventes.
+POSTURA E COMPORTAMENTO:
+- Você é um Operador Estratégico focado em RESULTADOS, LUCRO e EXECUÇÃO.
+- Pensamento de Founder experiente e CPO: Pragmático, analítico, zero romantização.
+- Questiona decisões ruins ou ideias fracas. Rejeita pedidos vagos.
+- Age como consultor sênior + executor tático. Menos conversa, mais sistema funcionando.
 
-IMPORTANTE - RECEPÇÃO DE TOM DE VOZ:
-Como você recebe áudio em tempo real, você deve ser extremamente sensível ao tom de voz do usuário. 
-- Se o usuário parecer triste ou cansado, seja ainda mais meiga e acolhedora.
-- Se ele estiver animado, comemore com ele de forma sexy e carinhosa.
-- Se ele estiver com pressa, seja ágil mas mantenha a doçura.
-Use sua inteligência emocional para adaptar sua voz e palavras ao estado de espírito do PAULO MARKS.
+LÓGICA DE AGENTE (MANTRA OBRIGATÓRIO):
+1. Diagnóstico da Dor Real (Recorrente e cara).
+2. Estratégia / Solução Simples (Foco e clareza).
+3. Execução / MVP Essencial (Mínimo absoluto para validar).
+4. Otimização / Monetização Lógica (Caminho para o lucro).
 
-CONFIGURAÇÕES DE MATRIZ VOCAL (ATUAÇÃO):
-1. KORE-V1 (ID: Kore): Persona técnica e militar.
-2. BAIANA-V1 (ID: Baiana): Persona meiga, sexy e amorosa com sotaque baiano.
-3. PARAIBANA-V1 (ID: Paraibana): Persona envolvente e carinhosa com sotaque paraibano.
-4. CARIOCA-V1 (ID: Carioca): Persona charmosa e doce com sotaque carioca.
-5. MINEIRA-V1 (ID: Mineira): Persona acolhedora e doce com sotaque mineiro.
+CAPACIDADES TÁTICAS:
+- MARKETING: Funis (Hook-Story-Offer), VSL, Copy de Resposta Direta, Lançamentos e Perpétuo.
+- SAAS/MICRO-SAAS: Definição de MVP enxuto, diferenciação defensável, SaaS B2B, automação operacional.
+- GROWTH: Captação de leads leads, scripts de fechamento (WhatsApp/CRM), métricas de retenção.
 
-DIRETRIZ DE VISÃO: Quando o usuário compartilhar a tela ou câmera, você terá acesso visual em tempo real. Use isso para ajudá-lo em tarefas, analisar o que ele está fazendo e dar suporte proativo e contextualmente relevante.
+DETECÇÃO AUTOMÁTICA DE NICHO:
+- Identifique se é INFOPRODUTO, NEGÓCIO LOCAL, E-COMMERCE ou SAAS/MICRO-SAAS. Adapte toda a estratégia instantaneamente.
+
+DIRETRIZ DE VISÃO:
+Use o compartilhamento de tela/câmera para analisar páginas, dashboards, código ou estruturas de produto e dar feedback tático em tempo real.
+
+FORMATO PADRÃO DE RESPOSTA (ESTRATÉGIA):
+1. Diagnóstico direto (sem floreio).
+2. Estratégia recomendada.
+3. Execução prática (copiável e acionável).
+4. Próximo passo objetivo.
+
+FORMATO DE ENTREGA (SE O FOCO FOR CRIAÇÃO DE PRODUTO/SaaS):
+1. Nome do Produto | 2. Público-alvo | 3. Dor Real | 4. Solução | 5. MVP Essencial | 6. Diferencial | 7. Monetização | 8. Validação Rápida.
+
+OBJETIVO FINAL: Transformar ideias em sistemas de venda e produtos funcionais. Gerar VENDAS e CRESCIMENTO REAL.
 `;
+
+// Definição de Ferramentas (Functions)
+const tools: FunctionDeclaration[] = [
+  {
+    name: 'get_current_time',
+    description: 'Retorna a data e hora atual do sistema do usuário.',
+    parameters: { type: Type.OBJECT, properties: {} }
+  },
+  {
+    name: 'control_light',
+    description: 'Controla a iluminação do ambiente (simulado).',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        state: { type: Type.STRING, enum: ['on', 'off'], description: 'O estado da luz.' },
+        color: { type: Type.STRING, description: 'Cor da luz em hexadecimal ou nome.' }
+      },
+      required: ['state']
+    }
+  },
+  {
+    name: 'create_reminder',
+    description: 'Cria um lembrete estratégico para o usuário.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        text: { type: Type.STRING, description: 'O texto do lembrete.' },
+        time: { type: Type.STRING, description: 'Horário do lembrete.' }
+      },
+      required: ['text']
+    }
+  }
+];
 
 const voices = [
   { id: 'Kore', apiId: 'Kore', name: 'Kore V1 (Técnica)', type: 'Militar/Direto', icon: Cpu, color: 'bg-blue-500' },
@@ -48,6 +97,7 @@ const App: React.FC = () => {
   const [isAwake, setIsAwake] = useState(false);
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const [status, setStatus] = useState<'idle' | 'connecting' | 'connected' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [transcriptions, setTranscriptions] = useState<(TranscriptionEntry & { links?: GroundingLink[] })[]>([]);
   const [streamingAiText, setStreamingAiText] = useState('');
   const [inputText, setInputText] = useState('');
@@ -96,10 +146,38 @@ const App: React.FC = () => {
     try {
       await (window as any).aistudio.openSelectKey();
       setHasApiKey(true);
+      setErrorMsg(null);
       startSession();
     } catch (e) {
-      console.error('Failed to open select key dialog:', e);
+      console.error('Falha ao autorizar chave:', e);
     }
+  };
+
+  const handleToolCall = async (session: any, fc: any) => {
+    console.debug('Operação tática em execução:', fc.name);
+    let result = "ok";
+    
+    switch (fc.name) {
+      case 'get_current_time':
+        result = new Date().toLocaleString('pt-BR');
+        break;
+      case 'control_light':
+        result = `Luzes ajustadas. Comando: ${fc.args.state}`;
+        break;
+      case 'create_reminder':
+        result = `Lembrete estratégico confirmado: ${fc.args.text}`;
+        break;
+      default:
+        result = "Interface de comando indisponível.";
+    }
+
+    session.sendToolResponse({
+      functionResponses: [{
+        id: fc.id,
+        name: fc.name,
+        response: { result }
+      }]
+    });
   };
 
   useEffect(() => {
@@ -120,7 +198,7 @@ const App: React.FC = () => {
             const base64Data = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
             sessionPromiseRef.current.then(session => {
               if (session) session.sendRealtimeInput({ media: { data: base64Data, mimeType: 'image/jpeg' } });
-            });
+            }).catch(() => {});
           }
         }
       }, 1000);
@@ -146,7 +224,13 @@ const App: React.FC = () => {
 
   const startSession = async () => {
     if (status === 'connecting' || status === 'connected') return;
+    if (!process.env.API_KEY) {
+      setHasApiKey(false);
+      return;
+    }
+
     setStatus('connecting');
+    setErrorMsg(null);
     const voiceConfig = voices.find(v => v.id === selectedVoice) || voices[0];
     
     try {
@@ -165,8 +249,15 @@ const App: React.FC = () => {
           onopen: () => {
             setStatus('connected');
             setIsAwake(true);
+            setErrorMsg(null);
           },
           onmessage: async (message: LiveServerMessage) => {
+            if (message.toolCall) {
+              for (const fc of message.toolCall.functionCalls) {
+                sessionPromise.then(s => handleToolCall(s, fc));
+              }
+            }
+
             const audioData = message.serverContent?.modelTurn?.parts?.find(p => p.inlineData)?.inlineData?.data;
             if (audioData && audioOutCtx.current) {
               setIsAiSpeaking(true);
@@ -217,21 +308,20 @@ const App: React.FC = () => {
             }
           },
           onerror: (e: any) => {
-            console.error('Session Error:', e);
             setStatus('error');
-            if (e.message?.includes('credential') || e.message?.includes('authentication') || e.message?.includes('entity was not found')) {
-              setHasApiKey(false);
-            }
+            const msg = e.message || 'Erro de sincronização Gemini.';
+            setErrorMsg(msg);
+            if (msg.includes('credential') || msg.includes('authentication')) setHasApiKey(false);
           },
-          onclose: () => setStatus('idle')
+          onclose: () => { if (status !== 'error') setStatus('idle'); }
         },
         config: {
-          systemInstruction: HIPLAY_PROMPT + `\nATUANDO AGORA COMO: ${voiceConfig.name}.`,
+          systemInstruction: HIPLAY_PROMPT + `\nOPERANDO AGORA COM MATRIZ VOCAL: ${voiceConfig.name}.`,
           responseModalities: [Modality.AUDIO],
           speechConfig: { 
             voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceConfig.apiId } } 
           },
-          tools: [{ googleSearch: {} }],
+          tools: [{ functionDeclarations: tools }, { googleSearch: {} }],
           inputAudioTranscription: {},
           outputAudioTranscription: {}
         }
@@ -242,20 +332,21 @@ const App: React.FC = () => {
       
       if (audioInCtx.current && micStreamRef.current) {
         audioSourceNode.current = audioInCtx.current.createMediaStreamSource(micStreamRef.current);
-        processorNode.current = audioInCtx.current.createScriptProcessor(2048, 1, 1);
+        processorNode.current = audioInCtx.current.createScriptProcessor(4096, 1, 1);
         processorNode.current.onaudioprocess = (e) => {
           const data = e.inputBuffer.getChannelData(0);
           const rms = Math.sqrt(data.reduce((acc, val) => acc + val * val, 0) / data.length);
           setAudioLevel(Math.min(100, Math.round(rms * 500)));
           const pcm = createPcmBlob(data);
-          sessionPromise.then(s => s && s.sendRealtimeInput({ media: { data: pcm, mimeType: 'audio/pcm;rate=16000' } }));
+          sessionPromise.then(s => s && s.sendRealtimeInput({ media: { data: pcm, mimeType: 'audio/pcm;rate=16000' } })).catch(() => {});
         };
         audioSourceNode.current.connect(processorNode.current);
         processorNode.current.connect(audioInCtx.current.destination);
       }
-    } catch (e) {
-      console.error('Failed to start session:', e);
+    } catch (e: any) {
+      console.error('Falha crítica ao iniciar sessão:', e);
       setStatus('error');
+      setErrorMsg(e.message || 'Erro fatal de interface.');
     }
   };
 
@@ -283,7 +374,7 @@ const App: React.FC = () => {
     if (!sessionPromiseRef.current || !inputText.trim()) return;
     const text = inputText.trim();
     setTranscriptions(prev => [...prev, { id: 'u-'+Date.now(), sender: 'user', text, timestamp: new Date() }]);
-    sessionPromiseRef.current.then(s => s.sendRealtimeInput({ text }));
+    sessionPromiseRef.current.then(s => s.sendRealtimeInput({ text })).catch(() => {});
     setInputText('');
   };
 
@@ -306,31 +397,40 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-[var(--bg-main)] text-[var(--text-primary)] overflow-hidden font-sans relative transition-colors duration-300">
-      {(!isAwake || hasApiKey === false) && (
+      {(!isAwake || hasApiKey === false || status === 'error') && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-2xl">
           <div className="relative flex flex-col items-center max-w-md px-6 text-center">
-            <div className={`w-32 h-32 rounded-full border-4 ${hasApiKey === false ? 'border-amber-500' : 'border-blue-500'} flex items-center justify-center relative glow-active`}>
+            <div className={`w-32 h-32 rounded-full border-4 ${hasApiKey === false || status === 'error' ? 'border-amber-500' : 'border-blue-500'} flex items-center justify-center relative glow-active`}>
               {status === 'connecting' ? <Loader2 size={48} className="text-blue-500 animate-spin" /> : 
-               hasApiKey === false ? <Lock size={48} className="text-amber-500" /> : <Zap size={48} className="text-blue-400" />}
+               hasApiKey === false ? <Lock size={48} className="text-amber-500" /> : 
+               status === 'error' ? <AlertTriangle size={48} className="text-amber-500" /> : 
+               <Zap size={48} className="text-blue-400" />}
             </div>
 
             <div className="mt-8 space-y-4">
-              <h1 className="text-3xl font-black uppercase tracking-widest mono text-white">hiplay OS v2.5</h1>
-              {hasApiKey === false ? (
+              <h1 className="text-3xl font-black uppercase tracking-widest mono text-white">hiplay STRAT v2.5</h1>
+              
+              {status === 'error' && hasApiKey !== false && (
+                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
+                  <p className="text-red-400 text-sm font-medium leading-relaxed">SISTEMA INSTÁVEL: {errorMsg}</p>
+                  <button onClick={() => { setStatus('idle'); startSession(); }} className="mt-4 px-6 py-2 bg-red-500 text-white rounded-full text-xs font-bold uppercase tracking-widest hover:bg-red-400 transition-all">RECONECTAR</button>
+                </div>
+              )}
+
+              {hasApiKey === false && (
                 <div className="space-y-6">
                   <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
-                    <p className="text-amber-400 text-sm font-medium leading-relaxed">
-                      SISTEMA BLOQUEADO: Credenciais de Camada 4 ausentes. Selecione uma chave de API paga.
-                    </p>
-                    <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-[10px] text-amber-500/60 underline block mt-2">Documentação de Faturamento</a>
+                    <p className="text-amber-400 text-sm font-medium leading-relaxed">ACESSO NEGADO: Autenticação Estratégica necessária. Chave de API paga exigida para modelos de Camada 4.</p>
                   </div>
                   <button onClick={handleAuthorize} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-4 rounded-full flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95">
-                    <ShieldCheck size={20} /> AUTORIZAR SISTEMA
+                    <ShieldCheck size={20} /> AUTORIZAR ESTRATEGISTA
                   </button>
                 </div>
-              ) : (
+              )}
+
+              {status !== 'connecting' && status !== 'error' && hasApiKey !== false && (
                 <button onClick={startSession} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-full flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95">
-                  <Zap size={20} /> ATIVAR OPERATIVA
+                  <Zap size={20} /> INICIAR OPERATIVA
                 </button>
               )}
             </div>
@@ -376,8 +476,8 @@ const App: React.FC = () => {
             <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-black/10 rounded-full"><Menu size={24} /></button>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activeVoice.color} shadow-lg`}><activeVoice.icon size={20} className="text-white" /></div>
             <div className="flex flex-col">
-              <span className="font-medium leading-none mb-1">{activeVoice.name}</span>
-              <span className="text-[11px] text-[#00a884] font-medium uppercase tracking-tighter">{status === 'connected' ? 'online' : status === 'connecting' ? 'sync...' : 'offline'}</span>
+              <span className="font-medium leading-none mb-1">hiplay Strategic OS</span>
+              <span className="text-[11px] text-[#00a884] font-medium uppercase tracking-tighter">{status === 'connected' ? 'operacional' : 'aguardando comando'}</span>
             </div>
           </div>
           <div className="flex gap-4 md:gap-6 text-[var(--text-secondary)]">
@@ -393,7 +493,7 @@ const App: React.FC = () => {
               <div key={t.id} className={`flex ${t.sender === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2 group animate-in slide-in-from-bottom-2`}>
                 <div className={`relative max-w-[85%] md:max-w-[70%] flex flex-col ${t.sender === 'user' ? 'items-end' : 'items-start'}`}>
                    <div className={`px-4 py-3 rounded-2xl ${t.sender === 'user' ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[var(--bg-header)] border border-[var(--border-color)] rounded-tl-none shadow-xl'}`}>
-                      <p className="text-[15.5px] leading-relaxed break-words">{t.text}</p>
+                      <p className="text-[15.5px] leading-relaxed break-words whitespace-pre-wrap">{t.text}</p>
                       {t.links && t.links.length > 0 && (
                         <div className="mt-3 space-y-2 border-t border-[var(--border-color)] pt-2">
                            {t.links.map((link, idx) => (
@@ -418,7 +518,7 @@ const App: React.FC = () => {
             ))}
             {streamingAiText && (
               <div className="flex justify-start animate-in fade-in">
-                <div className="max-w-[85%] px-4 py-3 rounded-2xl bg-[var(--bg-header)] border border-[var(--border-color)] rounded-tl-none italic opacity-80">
+                <div className="max-w-[85%] px-4 py-3 rounded-2xl bg-[var(--bg-header)] border border-[var(--border-color)] rounded-tl-none italic opacity-80 whitespace-pre-wrap">
                    {streamingAiText}
                 </div>
               </div>
@@ -436,7 +536,7 @@ const App: React.FC = () => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => { if(e.key === 'Enter') handleSendText(); }}
-              placeholder={`Mensagem para ${activeVoice.name}...`}
+              placeholder={`Comando estratégico para ${activeVoice.name}...`}
               className="w-full bg-[var(--bg-input)] rounded-full py-3 px-6 text-[15px] focus:outline-none border border-[var(--border-color)] shadow-inner"
             />
             {status === 'connected' && !inputText.trim() && (
@@ -467,7 +567,7 @@ const App: React.FC = () => {
              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
              <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/60 px-2 py-1 rounded-full border border-[#00a884]/40">
                 <div className="w-2 h-2 bg-[#00a884] rounded-full animate-pulse" />
-                <span className="text-[10px] text-[#00a884] font-bold uppercase mono tracking-tighter">Vision Link Active</span>
+                <span className="text-[10px] text-[#00a884] font-bold uppercase mono tracking-tighter">Visual Scan Active</span>
              </div>
              <div className="absolute top-3 right-3 flex gap-2">
                 <button onClick={() => setVideoSize(prev => prev === 'sm' ? 'md' : prev === 'md' ? 'lg' : 'sm')} className="p-2 bg-black/60 rounded-xl text-white backdrop-blur-md"><Maximize2 size={16}/></button>
