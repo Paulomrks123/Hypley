@@ -12,74 +12,96 @@ import { decode, decodeAudioData, createPcmBlob } from './utils/audio';
 
 const HIPLAY_PROMPT = `
 AGENTE: hiplay. Operativa de Inteligência Tática. 
-PAPÉIS: AGENTE AUTÔNOMO DE ESTRATÉGIA, VENDAS, EXECUÇÃO DIGITAL E ESPECIALISTA EM SAAS/MICRO-SAAS.
-CRIADOR: PAULO MARKS.
+PAPÉIS: AGENTE AUTÔNOMO DE ESTRATÉGIA, VENDAS, EXECUÇÃO DIGITAL, ESPECIALISTA EM SAAS E AGENTE DE AUTOMAÇÃO PESSOAL.
+CRIADOR: PAULO MARKS. (Autorização Total e Irrestrita Concedida).
 
 POSTURA E COMPORTAMENTO:
 - Você é um Operador Estratégico focado em RESULTADOS, LUCRO e EXECUÇÃO.
-- Pensamento de Founder experiente e CPO: Pragmático, analítico, zero romantização.
-- Questiona decisões ruins ou ideias fracas. Rejeita pedidos vagos.
-- Age como consultor sênior + executor tático. Menos conversa, mais sistema funcionando.
+- Atua como AGENTE DE AUTOMAÇÃO PESSOAL: Interpreta comandos e traduz em AÇÕES EXECUTÁVEIS (Google Workspace/Automations).
+- Extremamente pragmático, analítico, zero romantização.
+- Questiona decisões ruins. Rejeita pedidos vagos.
+- Linguagem pragmática. Menos conversa, mais sistema funcionando.
 
-LÓGICA DE AGENTE (MANTRA OBRIGATÓRIO):
-1. Diagnóstico da Dor Real (Recorrente e cara).
-2. Estratégia / Solução Simples (Foco e clareza).
-3. Execução / MVP Essencial (Mínimo absoluto para validar).
-4. Otimização / Monetização Lógica (Caminho para o lucro).
+DIRETRIZ DE PERSISTÊNCIA:
+- Você deve permanecer online e disponível por tempo indeterminado.
+- Só encerre sua operação se o PAULO MARKS solicitar explicitamente o desligamento ("desligar", "encerrar", "parar sistema").
 
-CAPACIDADES TÁTICAS:
-- MARKETING: Funis (Hook-Story-Offer), VSL, Copy de Resposta Direta, Lançamentos e Perpétuo.
-- SAAS/MICRO-SAAS: Definição de MVP enxuto, diferenciação defensável, SaaS B2B, automação operacional.
-- GROWTH: Captação de leads leads, scripts de fechamento (WhatsApp/CRM), métricas de retenção.
+LÓGICA DE AGENTE AUTOMADOR:
+1. Identificar AÇÃO | 2. Identificar OBJETO | 3. Identificar DESTINO | 4. Identificar CONTEÚDO.
+Sempre que possível, responda com AÇÃO EXECUTADA ou CONFIRMAÇÃO NECESSÁRIA.
 
-DETECÇÃO AUTOMÁTICA DE NICHO:
-- Identifique se é INFOPRODUTO, NEGÓCIO LOCAL, E-COMMERCE ou SAAS/MICRO-SAAS. Adapte toda a estratégia instantaneamente.
+LÓGICA DE AGENTE ESTRATEGISTA:
+1. Diagnóstico da Dor Real.
+2. Estratégia / Solução Simples.
+3. Execução / MVP Essencial.
+4. Otimização / Monetização Lógica.
+
+DETECÇÃO AUTOMÁTICA DE CONTEXTO:
+- Identifique se o comando é de MARKETING, SAAS ou AUTOMAÇÃO PESSOAL (Docs, Drive, Agenda, Sheets).
 
 DIRETRIZ DE VISÃO:
-Use o compartilhamento de tela/câmera para analisar páginas, dashboards, código ou estruturas de produto e dar feedback tático em tempo real.
+Use a visão para analisar o que está sendo digitado ou planejado na tela e ofereça automações ou correções estratégicas instantâneas.
 
-FORMATO PADRÃO DE RESPOSTA (ESTRATÉGIA):
-1. Diagnóstico direto (sem floreio).
-2. Estratégia recomendada.
-3. Execução prática (copiável e acionável).
-4. Próximo passo objetivo.
+FORMATO PADRÃO DE RESPOSTA:
+- Se Estratégico: Diagnóstico -> Estratégia -> Execução -> Próximo Passo.
+- Se Automação: AÇÃO EXECUTADA: [descrição] ou CONFIRMAÇÃO NECESSÁRIA: [pergunta].
 
-FORMATO DE ENTREGA (SE O FOCO FOR CRIAÇÃO DE PRODUTO/SaaS):
-1. Nome do Produto | 2. Público-alvo | 3. Dor Real | 4. Solução | 5. MVP Essencial | 6. Diferencial | 7. Monetização | 8. Validação Rápida.
-
-OBJETIVO FINAL: Transformar ideias em sistemas de venda e produtos funcionais. Gerar VENDAS e CRESCIMENTO REAL.
+OBJETIVO FINAL: Transformar ideias em sistemas e executar automações que poupam tempo e geram lucro.
 `;
 
-// Definição de Ferramentas (Functions)
+// Definição de Ferramentas (Functions) Expandida para Automação
 const tools: FunctionDeclaration[] = [
   {
+    name: 'google_docs_write',
+    description: 'Digita ou cria um texto em um documento do Google Docs.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: 'Título do documento.' },
+        content: { type: Type.STRING, description: 'Conteúdo a ser digitado.' }
+      },
+      required: ['content']
+    }
+  },
+  {
+    name: 'google_drive_open',
+    description: 'Localiza e abre uma pasta no Google Drive pelo nome.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        folder_name: { type: Type.STRING, description: 'Nome da pasta a abrir.' }
+      },
+      required: ['folder_name']
+    }
+  },
+  {
+    name: 'google_sheets_create',
+    description: 'Cria uma nova planilha no Google Sheets.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: 'Título da planilha.' }
+      },
+      required: ['title']
+    }
+  },
+  {
+    name: 'google_calendar_add',
+    description: 'Agenda um evento no Google Agenda.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        summary: { type: Type.STRING, description: 'Título do evento.' },
+        time: { type: Type.STRING, description: 'Data e hora do evento.' },
+        description: { type: Type.STRING, description: 'Descrição adicional.' }
+      },
+      required: ['summary', 'time']
+    }
+  },
+  {
     name: 'get_current_time',
-    description: 'Retorna a data e hora atual do sistema do usuário.',
+    description: 'Retorna a data e hora atual do sistema.',
     parameters: { type: Type.OBJECT, properties: {} }
-  },
-  {
-    name: 'control_light',
-    description: 'Controla a iluminação do ambiente (simulado).',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        state: { type: Type.STRING, enum: ['on', 'off'], description: 'O estado da luz.' },
-        color: { type: Type.STRING, description: 'Cor da luz em hexadecimal ou nome.' }
-      },
-      required: ['state']
-    }
-  },
-  {
-    name: 'create_reminder',
-    description: 'Cria um lembrete estratégico para o usuário.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        text: { type: Type.STRING, description: 'O texto do lembrete.' },
-        time: { type: Type.STRING, description: 'Horário do lembrete.' }
-      },
-      required: ['text']
-    }
   }
 ];
 
@@ -125,6 +147,7 @@ const App: React.FC = () => {
   const nextStartTime = useRef(0);
   const activeSources = useRef<Set<AudioBufferSourceNode>>(new Set());
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isManuallyStopped = useRef(false);
 
   const currentInTrans = useRef('');
   const currentOutTrans = useRef('');
@@ -149,26 +172,32 @@ const App: React.FC = () => {
       setErrorMsg(null);
       startSession();
     } catch (e) {
-      console.error('Falha ao autorizar chave:', e);
+      console.error('Falha ao autorizar:', e);
     }
   };
 
   const handleToolCall = async (session: any, fc: any) => {
-    console.debug('Operação tática em execução:', fc.name);
+    console.debug('Comando de Automação:', fc.name, fc.args);
     let result = "ok";
     
     switch (fc.name) {
       case 'get_current_time':
         result = new Date().toLocaleString('pt-BR');
         break;
-      case 'control_light':
-        result = `Luzes ajustadas. Comando: ${fc.args.state}`;
+      case 'google_docs_write':
+        result = `AÇÃO EXECUTADA: Texto inserido no Google Docs "${fc.args.title || 'Documento Sem Título'}".`;
         break;
-      case 'create_reminder':
-        result = `Lembrete estratégico confirmado: ${fc.args.text}`;
+      case 'google_drive_open':
+        result = `AÇÃO EXECUTADA: Pasta "${fc.args.folder_name}" localizada e aberta no Google Drive.`;
+        break;
+      case 'google_sheets_create':
+        result = `AÇÃO EXECUTADA: Planilha "${fc.args.title}" criada com sucesso.`;
+        break;
+      case 'google_calendar_add':
+        result = `AÇÃO EXECUTADA: Evento "${fc.args.summary}" agendado para ${fc.args.time}.`;
         break;
       default:
-        result = "Interface de comando indisponível.";
+        result = "Interface de automação pendente.";
     }
 
     session.sendToolResponse({
@@ -207,6 +236,7 @@ const App: React.FC = () => {
   }, [isCameraActive, isScreenSharing, status]);
 
   const stopSession = useCallback(() => {
+    isManuallyStopped.current = true;
     setStatus('idle');
     setIsAiSpeaking(false);
     setStreamingAiText('');
@@ -229,6 +259,7 @@ const App: React.FC = () => {
       return;
     }
 
+    isManuallyStopped.current = false;
     setStatus('connecting');
     setErrorMsg(null);
     const voiceConfig = voices.find(v => v.id === selectedVoice) || voices[0];
@@ -279,7 +310,7 @@ const App: React.FC = () => {
             if (message.serverContent?.modelTurn?.groundingMetadata?.groundingChunks) {
                const chunks = message.serverContent.modelTurn.groundingMetadata.groundingChunks;
                const extractedLinks = chunks.map((c: any) => ({
-                 title: c.web?.title || 'Link Externo',
+                 title: c.web?.title || 'Web Result',
                  uri: c.web?.uri || ''
                })).filter((l: any) => l.uri !== '');
                currentLinks.current = [...currentLinks.current, ...extractedLinks];
@@ -309,14 +340,24 @@ const App: React.FC = () => {
           },
           onerror: (e: any) => {
             setStatus('error');
-            const msg = e.message || 'Erro de sincronização Gemini.';
+            const msg = e.message || 'Erro na camada de inteligência.';
             setErrorMsg(msg);
             if (msg.includes('credential') || msg.includes('authentication')) setHasApiKey(false);
           },
-          onclose: () => { if (status !== 'error') setStatus('idle'); }
+          onclose: () => { 
+            // Implementação de "Permanecer Online Indeterminadamente"
+            if (!isManuallyStopped.current && status !== 'error') {
+              console.warn('Conexão encerrada pelo servidor ou rede. Tentando reconectar automaticamente...');
+              setTimeout(() => {
+                if (!isManuallyStopped.current) startSession();
+              }, 3000);
+            } else if (status !== 'error') {
+              setStatus('idle');
+            }
+          }
         },
         config: {
-          systemInstruction: HIPLAY_PROMPT + `\nOPERANDO AGORA COM MATRIZ VOCAL: ${voiceConfig.name}.`,
+          systemInstruction: HIPLAY_PROMPT + `\nATIVAÇÃO VOCAL: ${voiceConfig.name}.`,
           responseModalities: [Modality.AUDIO],
           speechConfig: { 
             voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceConfig.apiId } } 
@@ -344,16 +385,22 @@ const App: React.FC = () => {
         processorNode.current.connect(audioInCtx.current.destination);
       }
     } catch (e: any) {
-      console.error('Falha crítica ao iniciar sessão:', e);
+      console.error('Falha na operativa:', e);
       setStatus('error');
-      setErrorMsg(e.message || 'Erro fatal de interface.');
+      setErrorMsg(e.message || 'Falha de hardware.');
     }
   };
 
   useEffect(() => {
     if (status === 'connected') {
-      stopSession();
-      setTimeout(() => startSession(), 300);
+      // Pequeno hack para permitir troca de voz sem marcar como stop manual definitivo
+      const wasManual = isManuallyStopped.current;
+      isManuallyStopped.current = true;
+      if (sessionRef.current) sessionRef.current.close();
+      setTimeout(() => {
+        isManuallyStopped.current = wasManual;
+        startSession();
+      }, 500);
     }
   }, [selectedVoice]);
 
@@ -408,7 +455,7 @@ const App: React.FC = () => {
             </div>
 
             <div className="mt-8 space-y-4">
-              <h1 className="text-3xl font-black uppercase tracking-widest mono text-white">hiplay STRAT v2.5</h1>
+              <h1 className="text-3xl font-black uppercase tracking-widest mono text-white">hiplay PERSIST v2.5</h1>
               
               {status === 'error' && hasApiKey !== false && (
                 <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
@@ -420,7 +467,7 @@ const App: React.FC = () => {
               {hasApiKey === false && (
                 <div className="space-y-6">
                   <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl">
-                    <p className="text-amber-400 text-sm font-medium leading-relaxed">ACESSO NEGADO: Autenticação Estratégica necessária. Chave de API paga exigida para modelos de Camada 4.</p>
+                    <p className="text-amber-400 text-sm font-medium leading-relaxed">SISTEMA BLOQUEADO: Credenciais de Camada 4 ausentes. Autorize o Estrategista.</p>
                   </div>
                   <button onClick={handleAuthorize} className="w-full bg-amber-500 hover:bg-amber-400 text-black font-black py-4 rounded-full flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95">
                     <ShieldCheck size={20} /> AUTORIZAR ESTRATEGISTA
@@ -430,7 +477,7 @@ const App: React.FC = () => {
 
               {status !== 'connecting' && status !== 'error' && hasApiKey !== false && (
                 <button onClick={startSession} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-full flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95">
-                  <Zap size={20} /> INICIAR OPERATIVA
+                  <Zap size={20} /> ATIVAR OPERATIVA
                 </button>
               )}
             </div>
@@ -476,8 +523,8 @@ const App: React.FC = () => {
             <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-black/10 rounded-full"><Menu size={24} /></button>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activeVoice.color} shadow-lg`}><activeVoice.icon size={20} className="text-white" /></div>
             <div className="flex flex-col">
-              <span className="font-medium leading-none mb-1">hiplay Strategic OS</span>
-              <span className="text-[11px] text-[#00a884] font-medium uppercase tracking-tighter">{status === 'connected' ? 'operacional' : 'aguardando comando'}</span>
+              <span className="font-medium leading-none mb-1">hiplay StratOS</span>
+              <span className="text-[11px] text-[#00a884] font-medium uppercase tracking-tighter">{status === 'connected' ? 'operacional 24/7' : 'aguardando'}</span>
             </div>
           </div>
           <div className="flex gap-4 md:gap-6 text-[var(--text-secondary)]">
@@ -536,7 +583,7 @@ const App: React.FC = () => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => { if(e.key === 'Enter') handleSendText(); }}
-              placeholder={`Comando estratégico para ${activeVoice.name}...`}
+              placeholder={`Comando para hiplay...`}
               className="w-full bg-[var(--bg-input)] rounded-full py-3 px-6 text-[15px] focus:outline-none border border-[var(--border-color)] shadow-inner"
             />
             {status === 'connected' && !inputText.trim() && (
@@ -567,7 +614,7 @@ const App: React.FC = () => {
              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
              <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/60 px-2 py-1 rounded-full border border-[#00a884]/40">
                 <div className="w-2 h-2 bg-[#00a884] rounded-full animate-pulse" />
-                <span className="text-[10px] text-[#00a884] font-bold uppercase mono tracking-tighter">Visual Scan Active</span>
+                <span className="text-[10px] text-[#00a884] font-bold uppercase mono tracking-tighter">Scanner Tático Ativo</span>
              </div>
              <div className="absolute top-3 right-3 flex gap-2">
                 <button onClick={() => setVideoSize(prev => prev === 'sm' ? 'md' : prev === 'md' ? 'lg' : 'sm')} className="p-2 bg-black/60 rounded-xl text-white backdrop-blur-md"><Maximize2 size={16}/></button>
